@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: ./VendePraMim.Api
+      dockerfile: Dockerfile
+    image: vendepra.api
+    container_name: vendepra_api
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - db
+
+  blazor:
+    build:
+      context: ./VendePraMim.Blazor
+      dockerfile: Dockerfile
+    image: vendepra.blazor
+    container_name: vendepra_blazor
+    ports:
+      - "5001:80"
+    depends_on:
+      - api
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: vendepra_db
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssqldata:/var/opt/mssql
+
+volumes:
+  mssqldata:

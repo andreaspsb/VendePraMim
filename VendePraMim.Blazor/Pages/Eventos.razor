@@ -1,0 +1,60 @@
+@page "/eventos"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<h3>Eventos</h3>
+
+@if (eventos is null)
+{
+    <p>Carregando...</p>
+}
+else if (!eventos.Any())
+{
+    <p>Nenhum evento encontrado.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th>Local</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var e in eventos)
+        {
+            <tr>
+                <td>@e.Nome</td>
+                <td>@e.Categoria</td>
+                <td>@e.Data.ToShortDateString()</td>
+                <td>@e.Local</td>
+                <td>
+                    <a href="/eventos/@e.Id">Detalhes</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<EventoDto> eventos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        eventos = await Http.GetFromJsonAsync<List<EventoDto>>("api/v1/eventos?page=1&pageSize=20");
+    }
+
+    public class EventoDto
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public string Categoria { get; set; }
+        public DateTime Data { get; set; }
+        public string Local { get; set; }
+    }
+}

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore VendePraMim.sln
+
+      - name: Build
+        run: dotnet build VendePraMim.sln --configuration Release --no-restore
+
+      - name: Análise de código (dotnet format)
+        run: dotnet format --verify-no-changes --verbosity diagnostic || true
+
+      - name: Testes
+        run: dotnet test VendePraMim.sln --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+
+      - name: Upload de logs de teste
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+
+      - name: Deploy Blazor (simulado)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "Simulando deploy do Blazor..."
+          # dotnet publish VendePraMim.Blazor/VendePraMim.Blazor.csproj -c Release -o deploy
+          # rsync/scp/copy para destino real
+
+      - name: Build imagem Docker da API
+        run: |
+          docker build -t vendepra.api ./VendePraMim.Api
+
+      - name: Build imagem Docker do Blazor
+        run: |
+          docker build -t vendepra.blazor ./VendePraMim.Blazor
+
+      - name: Lista imagens Docker
+        run: docker images

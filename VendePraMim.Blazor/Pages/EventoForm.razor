@@ -1,0 +1,49 @@
+@page "/eventos/novo"
+@inject HttpClient Http
+@using System.Net.Http.Json
+
+<h3>Novo Evento</h3>
+
+<EditForm Model="evento" OnValidSubmit="Salvar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label>Nome</label>
+        <InputText class="form-control" @bind-Value="evento.Nome" />
+    </div>
+    <div class="mb-3">
+        <label>Categoria</label>
+        <InputText class="form-control" @bind-Value="evento.Categoria" />
+    </div>
+    <div class="mb-3">
+        <label>Data</label>
+        <InputDate class="form-control" @bind-Value="evento.Data" />
+    </div>
+    <div class="mb-3">
+        <label>Local</label>
+        <InputText class="form-control" @bind-Value="evento.Local" />
+    </div>
+    <button class="btn btn-primary" type="submit">Salvar</button>
+</EditForm>
+
+@code {
+    private EventoRequest evento = new();
+    private async Task Salvar()
+    {
+        var resp = await Http.PostAsJsonAsync("api/v1/eventos", evento);
+        if (resp.IsSuccessStatusCode)
+        {
+            // Redirecionar para listagem
+            NavManager.NavigateTo("/eventos");
+        }
+    }
+    [Inject] NavigationManager NavManager { get; set; }
+    public class EventoRequest
+    {
+        public string Nome { get; set; }
+        public string Categoria { get; set; }
+        public DateTime Data { get; set; }
+        public string Local { get; set; }
+        public int? OrganizadorId { get; set; }
+    }
+}

@@ -1,0 +1,35 @@
+@page "/eventos/{Id:int}"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@code {
+    [Parameter] public int Id { get; set; }
+    private EventoDto evento;
+    protected override async Task OnInitializedAsync()
+    {
+        evento = await Http.GetFromJsonAsync<EventoDto>($"api/v1/eventos/{Id}");
+    }
+    public class EventoDto
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public string Categoria { get; set; }
+        public DateTime Data { get; set; }
+        public string Local { get; set; }
+        public int? OrganizadorId { get; set; }
+        public string OrganizadorNome { get; set; }
+    }
+}
+
+@if (evento is null)
+{
+    <p>Carregando...</p>
+}
+else
+{
+    <h3>@evento.Nome</h3>
+    <p><b>Categoria:</b> @evento.Categoria</p>
+    <p><b>Data:</b> @evento.Data.ToShortDateString()</p>
+    <p><b>Local:</b> @evento.Local</p>
+    <p><b>Organizador:</b> @evento.OrganizadorNome</p>
+    <a href="/eventos">Voltar</a>
+}

@@ -1,0 +1,42 @@
+@page "/login"
+@inject VendePraMim.Blazor.Services.AuthenticationService AuthService
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(erro))
+{
+    <div class="alert alert-danger">@erro</div>
+}
+
+<EditForm Model="login" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="login.Email" />
+    </div>
+    <div class="mb-3">
+        <label>Senha</label>
+        <InputText class="form-control" @bind-Value="login.Senha" type="password" />
+    </div>
+    <button class="btn btn-primary" type="submit">Entrar</button>
+</EditForm>
+
+@code {
+    private LoginModel login = new();
+    private string erro;
+    private async Task HandleLogin()
+    {
+        var ok = await AuthService.LoginAsync(login.Email, login.Senha);
+        if (ok)
+            Nav.NavigateTo("/");
+        else
+            erro = "Usuário ou senha inválidos.";
+    }
+    public class LoginModel
+    {
+        public string Email { get; set; }
+        public string Senha { get; set; }
+    }
+}
