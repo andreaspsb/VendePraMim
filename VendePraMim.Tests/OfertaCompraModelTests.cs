@@ -15,7 +15,19 @@ namespace VendePraMim.Tests
                 TipoIngresso = "",
                 PrecoMaximo = -1,
                 EventoId = 0,
-                CompradorId = 0
+                CompradorId = 0,
+                Evento = new Evento {
+                    Nome = "",
+                    Categoria = "",
+                    Local = ""
+                },
+                Comprador = new Comprador {
+                    NomeCompleto = "",
+                    Cpf = "",
+                    Cidade = "",
+                    Email = "",
+                    Tipo = ""
+                }
             };
             var context = new ValidationContext(oferta);
             var results = new List<ValidationResult>();

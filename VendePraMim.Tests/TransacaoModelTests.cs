@@ -15,7 +15,18 @@ namespace VendePraMim.Tests
                 IngressoId = 0,
                 CompradorId = 0,
                 ValorPago = -1,
-                DataCompra = DateTime.MinValue
+                DataCompra = DateTime.MinValue,
+                Ingresso = new Ingresso {
+                    Tipo = "",
+                    Setor = ""
+                },
+                Comprador = new Comprador {
+                    NomeCompleto = "",
+                    Cpf = "",
+                    Cidade = "",
+                    Email = "",
+                    Tipo = ""
+                }
             };
             var context = new ValidationContext(transacao);
             var results = new List<ValidationResult>();
