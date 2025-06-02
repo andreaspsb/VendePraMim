@@ -31,12 +31,22 @@ jobs:
       - name: Testes
         run: dotnet test VendePraMim.sln --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
 
+      - name: Testes com cobertura de código
+        run: dotnet test VendePraMim.sln --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults /p:CollectCoverage=true /p:CoverletOutput=./TestResults/coverage/ /p:CoverletOutputFormat=cobertura
+
       - name: Upload de logs de teste
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: ./TestResults
+
+      - name: Upload de cobertura de código
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-codigo
+          path: ./TestResults/coverage/
 
       - name: Deploy Blazor (simulado)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
