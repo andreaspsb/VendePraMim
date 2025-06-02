@@ -2,7 +2,9 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 
 namespace VendePraMim.Blazor.Services;
 
@@ -10,13 +12,15 @@ public class AuthenticationService : AuthenticationStateProvider
 {
     private readonly HttpClient _http;
     private readonly NavigationManager _nav;
+    private readonly IJSRuntime _js;
     private const string TokenKey = "jwt_token";
     private ClaimsPrincipal _anonymous => new(new ClaimsIdentity());
 
-    public AuthenticationService(HttpClient http, NavigationManager nav)
+    public AuthenticationService(HttpClient http, NavigationManager nav, IJSRuntime js)
     {
         _http = http;
         _nav = nav;
+        _js = js;
     }
 
     public async Task<bool> LoginAsync(string email, string senha)
@@ -48,15 +52,15 @@ public class AuthenticationService : AuthenticationStateProvider
 
     public async Task<string?> GetToken()
     {
-        return await Task.FromResult(LocalStorage.Get(TokenKey));
+        return await _js.InvokeAsync<string>("localStorage.getItem", TokenKey);
     }
 
     private async Task SetToken(string? token)
     {
         if (string.IsNullOrWhiteSpace(token))
-            LocalStorage.Remove(TokenKey);
+            await _js.InvokeVoidAsync("localStorage.removeItem", TokenKey);
         else
-            LocalStorage.Set(TokenKey, token);
+            await _js.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
         await Task.CompletedTask;
     }
 
@@ -79,15 +83,4 @@ public class AuthenticationService : AuthenticationStateProvider
     }
 
     private class LoginResult { public string Token { get; set; } = string.Empty; }
-}
-
-// Simples LocalStorage helper (pode ser substituído por pacote NuGet)
-public static class LocalStorage
-{
-    public static void Set(string key, string value) =>
-        Microsoft.JSInterop.JSRuntime.Current.InvokeVoidAsync("localStorage.setItem", key, value);
-    public static string? Get(string key) =>
-        Microsoft.JSInterop.JSRuntime.Current.InvokeAsync<string>("localStorage.getItem", key).Result;
-    public static void Remove(string key) =>
-        Microsoft.JSInterop.JSRuntime.Current.InvokeVoidAsync("localStorage.removeItem", key);
 }

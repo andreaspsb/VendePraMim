@@ -1,11 +1,11 @@
-@page "/eventos/novo"
-@inject VendePraMim.Blazor.Services.EventoService EventoService
+@page "/transacoes/novo"
+@inject VendePraMim.Blazor.Services.TransacaoService TransacaoService
 @inject NavigationManager NavManager
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 
 <div class="container-sm mt-4" style="max-width: 500px;">
-    <h3 class="mb-4">Novo Evento</h3>
+    <h3 class="mb-4">Nova Transação</h3>
     <AuthorizeView>
         <Authorized>
             @if (!string.IsNullOrEmpty(erro))
@@ -16,24 +16,28 @@
             {
                 <div class="alert alert-success">@sucesso</div>
             }
-            <EditForm Model="evento" OnValidSubmit="Salvar">
+            <EditForm Model="transacao" OnValidSubmit="Salvar">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="mb-3">
-                    <label class="form-label">Nome</label>
-                    <InputText class="form-control" @bind-Value="evento.Nome" />
+                    <label class="form-label">IngressoId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.IngressoId" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Categoria</label>
-                    <InputText class="form-control" @bind-Value="evento.Categoria" />
+                    <label class="form-label">CompradorId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.CompradorId" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">VendedorId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.VendedorId" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Valor</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.Valor" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Data</label>
-                    <InputDate class="form-control" @bind-Value="evento.Data" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Local</label>
-                    <InputText class="form-control" @bind-Value="evento.Local" />
+                    <InputDate class="form-control" @bind-Value="transacao.Data" />
                 </div>
                 <button class="btn btn-primary w-100" type="submit" disabled="@loading">
                     <span class="bi bi-check-circle me-1"></span>@((loading ? "Salvando..." : "Salvar"))
@@ -41,13 +45,13 @@
             </EditForm>
         </Authorized>
         <NotAuthorized>
-            <div class="alert alert-warning mt-4">Você precisa estar autenticado para criar eventos.</div>
+            <div class="alert alert-warning mt-4">Você precisa estar autenticado para criar transações.</div>
         </NotAuthorized>
     </AuthorizeView>
 </div>
 
 @code {
-    private EventoService.EventoRequest evento = new();
+    private TransacaoService.TransacaoRequest transacao = new();
     private string erro;
     private string sucesso;
     private bool loading;
@@ -56,17 +60,17 @@
     {
         erro = sucesso = string.Empty;
         loading = true;
-        var (ok, msg) = await EventoService.CriarAsync(evento);
+        var (ok, msg) = await TransacaoService.CriarAsync(transacao);
         loading = false;
         if (ok)
         {
-            sucesso = "Evento criado com sucesso!";
+            sucesso = "Transação criada com sucesso!";
             await Task.Delay(1000);
-            NavManager.NavigateTo("/eventos");
+            NavManager.NavigateTo("/transacoes");
         }
         else
         {
-            erro = "Erro ao criar evento: " + msg;
+            erro = "Erro ao criar transação: " + msg;
         }
     }
 }

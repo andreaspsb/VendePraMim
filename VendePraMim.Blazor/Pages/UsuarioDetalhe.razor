@@ -1,0 +1,38 @@
+@page "/usuarios/{Id:int}"
+@inject VendePraMim.Blazor.Services.UsuarioService UsuarioService
+@inject NavigationManager NavManager
+
+<h3>Detalhe do Usuário</h3>
+
+@if (loading)
+{
+    <p>Carregando...</p>
+}
+else if (usuario is null)
+{
+    <div class="alert alert-danger">Usuário não encontrado.</div>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-2">Nome</dt>
+        <dd class="col-sm-10">@usuario.NomeCompleto</dd>
+        <dt class="col-sm-2">Email</dt>
+        <dd class="col-sm-10">@usuario.Email</dd>
+        <dt class="col-sm-2">Perfil</dt>
+        <dd class="col-sm-10">@usuario.Role</dd>
+    </dl>
+    <a href="/usuarios">Voltar</a>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private UsuarioService.UsuarioDto? usuario;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuario = await UsuarioService.ObterAsync(Id);
+        loading = false;
+    }
+}

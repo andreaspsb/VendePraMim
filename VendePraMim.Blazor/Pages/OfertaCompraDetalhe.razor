@@ -1,0 +1,42 @@
+@page "/ofertascompra/{Id:int}"
+@inject VendePraMim.Blazor.Services.OfertaCompraService OfertaCompraService
+@inject NavigationManager NavManager
+
+<h3>Detalhe da Oferta de Compra</h3>
+
+@if (loading)
+{
+    <p>Carregando...</p>
+}
+else if (oferta is null)
+{
+    <div class="alert alert-danger">Oferta não encontrada.</div>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-2">Evento</dt>
+        <dd class="col-sm-10">@oferta.EventoNome</dd>
+        <dt class="col-sm-2">Comprador</dt>
+        <dd class="col-sm-10">@oferta.CompradorNome</dd>
+        <dt class="col-sm-2">Tipo Ingresso</dt>
+        <dd class="col-sm-10">@oferta.TipoIngresso</dd>
+        <dt class="col-sm-2">Quantidade</dt>
+        <dd class="col-sm-10">@oferta.Quantidade</dd>
+        <dt class="col-sm-2">Ativa</dt>
+        <dd class="col-sm-10">@(oferta.Ativa ? "Sim" : "Não")</dd>
+    </dl>
+    <a href="/ofertascompra">Voltar</a>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private OfertaCompraService.OfertaCompraDto? oferta;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        oferta = await OfertaCompraService.ObterAsync(Id);
+        loading = false;
+    }
+}

@@ -1,0 +1,104 @@
+@page "/usuarios/editar/{Id:int}"
+@inject VendePraMim.Blazor.Services.UsuarioService UsuarioService
+@inject NavigationManager NavManager
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Editar Usuário</h3>
+        @if (loading)
+        {
+            <p>Carregando...</p>
+        }
+        else
+        {
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="alert alert-danger">@erro</div>
+            }
+            @if (!string.IsNullOrEmpty(sucesso))
+            {
+                <div class="alert alert-success">@sucesso</div>
+            }
+            <EditForm Model="usuario" OnValidSubmit="Salvar">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="mb-3">
+                    <label>Nome Completo</label>
+                    <InputText class="form-control" @bind-Value="usuario.NomeCompleto" />
+                </div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <InputText class="form-control" @bind-Value="usuario.Email" />
+                </div>
+                <div class="mb-3">
+                    <label>Senha</label>
+                    <InputText class="form-control" @bind-Value="usuario.Senha" type="password" />
+                </div>
+                <div class="mb-3">
+                    <label>Perfil</label>
+                    <InputText class="form-control" @bind-Value="usuario.Role" />
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@loadingSalvar">@((loadingSalvar ? "Salvando..." : "Salvar"))</button>
+            </EditForm>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning mt-4">Você precisa estar autenticado para editar usuários.</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private UsuarioService.UsuarioRequest usuario = new();
+    private string erro;
+    private string sucesso;
+    private bool loading = true;
+    private bool loadingSalvar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarUsuario();
+    }
+
+    private async Task CarregarUsuario()
+    {
+        loading = true;
+        erro = sucesso = string.Empty;
+        var dto = await UsuarioService.ObterAsync(Id);
+        if (dto is null)
+        {
+            erro = "Usuário não encontrado.";
+        }
+        else
+        {
+            usuario = new UsuarioService.UsuarioRequest
+            {
+                NomeCompleto = dto.NomeCompleto,
+                Email = dto.Email,
+                Senha = string.Empty,
+                Role = dto.Role
+            };
+        }
+        loading = false;
+    }
+
+    private async Task Salvar()
+    {
+        erro = sucesso = string.Empty;
+        loadingSalvar = true;
+        var (ok, msg) = await UsuarioService.EditarAsync(Id, usuario);
+        loadingSalvar = false;
+        if (ok)
+        {
+            sucesso = "Usuário atualizado com sucesso!";
+            await Task.Delay(1000);
+            NavManager.NavigateTo("/usuarios");
+        }
+        else
+        {
+            erro = "Erro ao atualizar usuário: " + msg;
+        }
+    }
+}

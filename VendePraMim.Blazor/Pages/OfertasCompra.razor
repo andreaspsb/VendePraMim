@@ -1,39 +1,17 @@
-@page "/eventos"
-@inject VendePraMim.Blazor.Services.EventoService EventoService
+@page "/ofertascompra"
+@inject VendePraMim.Blazor.Services.OfertaCompraService OfertaCompraService
 @inject NavigationManager NavManager
 @using Microsoft.AspNetCore.Components.Authorization
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Eventos</h3>
+    <h3 class="mb-0">Ofertas de Compra</h3>
     <AuthorizeView>
         <Authorized>
-            <a class="btn btn-success" href="/eventos/novo">
-                <span class="bi bi-plus-circle me-1"></span> Novo Evento
+            <a class="btn btn-success" href="/ofertascompra/novo">
+                <span class="bi bi-plus-circle me-1"></span> Nova Oferta
             </a>
         </Authorized>
     </AuthorizeView>
-</div>
-
-<div class="card mb-4 p-3">
-    <form class="row g-2 align-items-end" @onsubmit="Filtrar">
-        <div class="col-md-4">
-            <label class="form-label">Nome</label>
-            <input class="form-control" @bind="filtroNome" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Categoria</label>
-            <input class="form-control" @bind="filtroCategoria" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Data</label>
-            <input type="date" class="form-control" @bind="filtroData" />
-        </div>
-        <div class="col-md-2 d-grid">
-            <button class="btn btn-primary" type="submit" disabled="@loading">
-                <span class="bi bi-search"></span> Filtrar
-            </button>
-        </div>
-    </form>
 </div>
 
 @if (loading)
@@ -43,9 +21,9 @@
         <div>Carregando...</div>
     </div>
 }
-else if (!eventos.Any())
+else if (!ofertas.Any())
 {
-    <div class="alert alert-info">Nenhum evento encontrado.</div>
+    <div class="alert alert-info">Nenhuma oferta encontrada.</div>
 }
 else
 {
@@ -53,31 +31,33 @@ else
         <table class="table table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Nome</th>
-                    <th>Categoria</th>
-                    <th>Data</th>
-                    <th>Local</th>
+                    <th>Evento</th>
+                    <th>Comprador</th>
+                    <th>Tipo Ingresso</th>
+                    <th>Quantidade</th>
+                    <th>Ativa</th>
                     <th style="width:180px"></th>
                 </tr>
             </thead>
             <tbody>
-            @foreach (var e in eventos)
+            @foreach (var o in ofertas)
             {
                 <tr>
-                    <td>@e.Nome</td>
-                    <td>@e.Categoria</td>
-                    <td>@e.Data.ToShortDateString()</td>
-                    <td>@e.Local</td>
+                    <td>@o.EventoNome</td>
+                    <td>@o.CompradorNome</td>
+                    <td>@o.TipoIngresso</td>
+                    <td>@o.Quantidade</td>
+                    <td>@(o.Ativa ? "Sim" : "Não")</td>
                     <td>
-                        <a class="btn btn-sm btn-outline-secondary me-1" href="/eventos/@e.Id">
+                        <a class="btn btn-sm btn-outline-secondary me-1" href="/ofertascompra/@o.Id">
                             <span class="bi bi-eye"></span> Detalhes
                         </a>
                         <AuthorizeView>
                             <Authorized>
-                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(e.Id)">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Editar(o.Id)">
                                     <span class="bi bi-pencil"></span> Editar
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Excluir(e.Id)" disabled="@loadingExcluir">
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Excluir(o.Id)" disabled="@loadingExcluir">
                                     <span class="bi bi-trash"></span> Excluir
                                 </button>
                             </Authorized>
@@ -119,15 +99,11 @@ else
 }
 
 @code {
-    private List<EventoService.EventoDto> eventos = new();
+    private List<OfertaCompraService.OfertaCompraDto> ofertas = new();
     private bool loading = true;
     private bool loadingExcluir = false;
     private string erro;
     private string sucesso;
-    private string filtroNome;
-    private string filtroCategoria;
-    private string filtroData;
-
     private int paginaAtual = 1;
     private int totalPaginas = 1;
     private int pageSize = 20;
@@ -135,57 +111,49 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await CarregarEventos();
+        await CarregarOfertas();
     }
 
-    private async Task CarregarEventos()
+    private async Task CarregarOfertas()
     {
         loading = true;
         erro = sucesso = string.Empty;
         try
         {
-            var url = $"api/v1/eventos?page={paginaAtual}&pageSize={pageSize}";
-            if (!string.IsNullOrWhiteSpace(filtroNome)) url += $"&nome={Uri.EscapeDataString(filtroNome)}";
-            if (!string.IsNullOrWhiteSpace(filtroCategoria)) url += $"&categoria={Uri.EscapeDataString(filtroCategoria)}";
-            if (!string.IsNullOrWhiteSpace(filtroData)) url += $"&data={filtroData}";
-            var result = await EventoService.ListarPaginadoAsync(url);
-            eventos = result.Data;
+            var url = $"api/v1/ofertascompra?page={paginaAtual}&pageSize={pageSize}";
+            var result = await OfertaCompraService.ListarPaginadoAsync(url);
+            ofertas = result.Data;
             totalRegistros = result.Total;
             totalPaginas = (int)Math.Ceiling((double)totalRegistros / pageSize);
         }
         catch (Exception ex)
         {
-            erro = "Erro ao carregar eventos: " + ex.Message;
+            erro = "Erro ao carregar ofertas: " + ex.Message;
         }
         loading = false;
         StateHasChanged();
     }
 
-    private async Task Filtrar()
-    {
-        await CarregarEventos();
-    }
-
     private void Editar(int id)
     {
-        NavManager.NavigateTo($"/eventos/editar/{id}");
+        NavManager.NavigateTo($"/ofertascompra/editar/{id}");
     }
 
     private async Task Excluir(int id)
     {
-        if (!await Confirmar("Deseja realmente excluir este evento?")) return;
+        if (!await Confirmar("Deseja realmente excluir esta oferta?")) return;
         loadingExcluir = true;
         erro = sucesso = string.Empty;
-        var (ok, msg) = await EventoService.ExcluirAsync(id);
+        var (ok, msg) = await OfertaCompraService.ExcluirAsync(id);
         loadingExcluir = false;
         if (ok)
         {
-            sucesso = "Evento excluído com sucesso!";
-            await CarregarEventos();
+            sucesso = "Oferta excluída com sucesso!";
+            await CarregarOfertas();
         }
         else
         {
-            erro = "Erro ao excluir evento: " + msg;
+            erro = "Erro ao excluir oferta: " + msg;
         }
     }
 
@@ -193,7 +161,7 @@ else
     {
         if (novaPagina < 1 || novaPagina > totalPaginas) return;
         paginaAtual = novaPagina;
-        await CarregarEventos();
+        await CarregarOfertas();
     }
 
     private async Task<bool> Confirmar(string mensagem)

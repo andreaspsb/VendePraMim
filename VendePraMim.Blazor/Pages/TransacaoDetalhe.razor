@@ -1,0 +1,42 @@
+@page "/transacoes/{Id:int}"
+@inject VendePraMim.Blazor.Services.TransacaoService TransacaoService
+@inject NavigationManager NavManager
+
+<h3>Detalhe da Transação</h3>
+
+@if (loading)
+{
+    <p>Carregando...</p>
+}
+else if (transacao is null)
+{
+    <div class="alert alert-danger">Transação não encontrada.</div>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-2">Ingresso</dt>
+        <dd class="col-sm-10">@transacao.IngressoTipo</dd>
+        <dt class="col-sm-2">Comprador</dt>
+        <dd class="col-sm-10">@transacao.CompradorNome</dd>
+        <dt class="col-sm-2">Vendedor</dt>
+        <dd class="col-sm-10">@transacao.VendedorNome</dd>
+        <dt class="col-sm-2">Valor</dt>
+        <dd class="col-sm-10">@transacao.Valor.ToString("C")</dd>
+        <dt class="col-sm-2">Data</dt>
+        <dd class="col-sm-10">@transacao.Data.ToShortDateString()</dd>
+    </dl>
+    <a href="/transacoes">Voltar</a>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private TransacaoService.TransacaoDto? transacao;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        transacao = await TransacaoService.ObterAsync(Id);
+        loading = false;
+    }
+}

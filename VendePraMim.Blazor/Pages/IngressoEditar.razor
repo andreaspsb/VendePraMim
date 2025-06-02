@@ -1,0 +1,104 @@
+@page "/ingressos/editar/{Id:int}"
+@inject VendePraMim.Blazor.Services.IngressoService IngressoService
+@inject NavigationManager NavManager
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Editar Ingresso</h3>
+        @if (loading)
+        {
+            <p>Carregando...</p>
+        }
+        else
+        {
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="alert alert-danger">@erro</div>
+            }
+            @if (!string.IsNullOrEmpty(sucesso))
+            {
+                <div class="alert alert-success">@sucesso</div>
+            }
+            <EditForm Model="ingresso" OnValidSubmit="Salvar">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="mb-3">
+                    <label>Tipo</label>
+                    <InputText class="form-control" @bind-Value="ingresso.Tipo" />
+                </div>
+                <div class="mb-3">
+                    <label>Preço</label>
+                    <InputNumber class="form-control" @bind-Value="ingresso.Preco" />
+                </div>
+                <div class="mb-3">
+                    <label>EventoId</label>
+                    <InputNumber class="form-control" @bind-Value="ingresso.EventoId" />
+                </div>
+                <div class="mb-3">
+                    <label>Disponível</label>
+                    <InputCheckbox class="form-check-input" @bind-Value="ingresso.Disponivel" />
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@loadingSalvar">@((loadingSalvar ? "Salvando..." : "Salvar"))</button>
+            </EditForm>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning mt-4">Você precisa estar autenticado para editar ingressos.</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private IngressoService.IngressoRequest ingresso = new();
+    private string erro;
+    private string sucesso;
+    private bool loading = true;
+    private bool loadingSalvar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarIngresso();
+    }
+
+    private async Task CarregarIngresso()
+    {
+        loading = true;
+        erro = sucesso = string.Empty;
+        var dto = await IngressoService.ObterAsync(Id);
+        if (dto is null)
+        {
+            erro = "Ingresso não encontrado.";
+        }
+        else
+        {
+            ingresso = new IngressoService.IngressoRequest
+            {
+                Tipo = dto.Tipo,
+                Preco = dto.Preco,
+                EventoId = dto.EventoId,
+                Disponivel = dto.Disponivel
+            };
+        }
+        loading = false;
+    }
+
+    private async Task Salvar()
+    {
+        erro = sucesso = string.Empty;
+        loadingSalvar = true;
+        var (ok, msg) = await IngressoService.EditarAsync(Id, ingresso);
+        loadingSalvar = false;
+        if (ok)
+        {
+            sucesso = "Ingresso atualizado com sucesso!";
+            await Task.Delay(1000);
+            NavManager.NavigateTo("/ingressos");
+        }
+        else
+        {
+            erro = "Erro ao atualizar ingresso: " + msg;
+        }
+    }
+}

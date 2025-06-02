@@ -1,0 +1,40 @@
+@page "/ingressos/{Id:int}"
+@inject VendePraMim.Blazor.Services.IngressoService IngressoService
+@inject NavigationManager NavManager
+
+<h3>Detalhe do Ingresso</h3>
+
+@if (loading)
+{
+    <p>Carregando...</p>
+}
+else if (ingresso is null)
+{
+    <div class="alert alert-danger">Ingresso não encontrado.</div>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-2">Tipo</dt>
+        <dd class="col-sm-10">@ingresso.Tipo</dd>
+        <dt class="col-sm-2">Preço</dt>
+        <dd class="col-sm-10">@ingresso.Preco.ToString("C")</dd>
+        <dt class="col-sm-2">Evento</dt>
+        <dd class="col-sm-10">@ingresso.EventoNome</dd>
+        <dt class="col-sm-2">Disponível</dt>
+        <dd class="col-sm-10">@(ingresso.Disponivel ? "Sim" : "Não")</dd>
+    </dl>
+    <a href="/ingressos">Voltar</a>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private IngressoService.IngressoDto? ingresso;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ingresso = await IngressoService.ObterAsync(Id);
+        loading = false;
+    }
+}

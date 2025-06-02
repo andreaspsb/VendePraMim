@@ -1,0 +1,109 @@
+@page "/transacoes/editar/{Id:int}"
+@inject VendePraMim.Blazor.Services.TransacaoService TransacaoService
+@inject NavigationManager NavManager
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Editar Transação</h3>
+        @if (loading)
+        {
+            <p>Carregando...</p>
+        }
+        else
+        {
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div class="alert alert-danger">@erro</div>
+            }
+            @if (!string.IsNullOrEmpty(sucesso))
+            {
+                <div class="alert alert-success">@sucesso</div>
+            }
+            <EditForm Model="transacao" OnValidSubmit="Salvar">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="mb-3">
+                    <label>IngressoId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.IngressoId" />
+                </div>
+                <div class="mb-3">
+                    <label>CompradorId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.CompradorId" />
+                </div>
+                <div class="mb-3">
+                    <label>VendedorId</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.VendedorId" />
+                </div>
+                <div class="mb-3">
+                    <label>Valor</label>
+                    <InputNumber class="form-control" @bind-Value="transacao.Valor" />
+                </div>
+                <div class="mb-3">
+                    <label>Data</label>
+                    <InputDate class="form-control" @bind-Value="transacao.Data" />
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@loadingSalvar">@((loadingSalvar ? "Salvando..." : "Salvar"))</button>
+            </EditForm>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning mt-4">Você precisa estar autenticado para editar transações.</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private TransacaoService.TransacaoRequest transacao = new();
+    private string erro;
+    private string sucesso;
+    private bool loading = true;
+    private bool loadingSalvar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarTransacao();
+    }
+
+    private async Task CarregarTransacao()
+    {
+        loading = true;
+        erro = sucesso = string.Empty;
+        var dto = await TransacaoService.ObterAsync(Id);
+        if (dto is null)
+        {
+            erro = "Transação não encontrada.";
+        }
+        else
+        {
+            transacao = new TransacaoService.TransacaoRequest
+            {
+                IngressoId = dto.IngressoId,
+                CompradorId = dto.CompradorId,
+                VendedorId = dto.VendedorId,
+                Valor = dto.Valor,
+                Data = dto.Data
+            };
+        }
+        loading = false;
+    }
+
+    private async Task Salvar()
+    {
+        erro = sucesso = string.Empty;
+        loadingSalvar = true;
+        var (ok, msg) = await TransacaoService.EditarAsync(Id, transacao);
+        loadingSalvar = false;
+        if (ok)
+        {
+            sucesso = "Transação atualizada com sucesso!";
+            await Task.Delay(1000);
+            NavManager.NavigateTo("/transacoes");
+        }
+        else
+        {
+            erro = "Erro ao atualizar transação: " + msg;
+        }
+    }
+}
